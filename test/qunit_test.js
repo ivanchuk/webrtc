@@ -23,7 +23,8 @@ var USER_1 = "USER_SOURCE",
 /**
  * Re-used variables for this module
  **/
-var CORE_TEST_CHANNEL, CORE_TEST_MSG;
+var CORE_TEST_CHANNEL = "webrtc-testing",
+    CORE_TEST_MSG = "Hello this is a test";
 /**
  * Begin core tests
  **/

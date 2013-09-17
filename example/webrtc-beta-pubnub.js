@@ -102,12 +102,13 @@
       this.peerReady = false;
       this.selfUuid = selfUuid;
       this.otherUuid = otherUuid;
+
       // The send function is here so we do not count a reference to PubNub preventing its destruction.
       this.send = function (message, force) {
         var strMsg = message;
         message.uuid = selfUuid;
         message = JSON.stringify(message);
-        //debug("Sending", message, otherUuid);
+
         if (this.peerReady === true || force === true) {
           if (message.sdp) {
           }
@@ -140,11 +141,9 @@
           return;
         }
 
-        debug("Got message", message);
-
         var connected = PEER_CONNECTIONS[message.uuid] != null;
 
-        //// Setup the connection if we do not have one already.
+        // Setup the connection if we do not have one already.
         if (connected === false) {
           PUBNUB.createP2PConnection(message.uuid, false);
         }
@@ -156,15 +155,20 @@
         }
 
         if (message.sdp != null) {
+          debug("Remote Session Description:", message.sdp);
           connection.connection.setRemoteDescription(new RTCSessionDescription(message.sdp), function () {
             // Add ice candidates we might have gotten early.
-            for (var i = 0; i < connection.candidates; i++) {
-              connection.connection.addIceCandidate(new RTCIceCandidate(connection.candidates[i]));
-              connection.candidates = [];
+            var candidates = connection.candidates;
+            debug("Adding ice candidates", candidates, connection);
+            for (var i = 0; i < candidates.length; i++) {
+              debug("Remote ICE Candidate (backfill):", candidates[i]);
+              connection.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+              connection.connection.candidates = [];
             }
 
             // If we did not create the offer then create the answer.
             if (connection.connection.signalingState === 'have-remote-offer') {
+              debug("Creating answer...", message.uuid);
               connection.connection.createAnswer(function (description) {
                 PUBNUB.gotDescription(description, connection);
               }, function (err) {
@@ -178,9 +182,10 @@
             error("Error setting remote description: ", err);
           });
         } else if (message.initiation === true) {
-          PUBNUB.createP2PConnection(message.uuid, true);
-        } else {
-          if (connection.connection.remoteDescription != null && connection.connection.iceConnectionState !== "connected") {
+          //PUBNUB.createP2PConnection(message.uuid, true);
+        } else if (message.candidate) {
+          if (connection.connection.remoteDescription != null) {// && connection.connection.iceConnectionState !== "connected") {
+            debug("Remote ICE Candidate:", message.candidate);
             connection.connection.addIceCandidate(new RTCIceCandidate(message.candidate));
           }
           else {
@@ -205,6 +210,7 @@
           if (args.length > 1) {
             // We need to send a description because we are the "host"
             args[1].signalingChannel.initiate();
+            debug("Connection Queue Description", args);
             PUBNUB.gotDescription.apply(PUBNUB, args);
           } else if (args.length === 1) {
             // We are not the "host" so we send initiation
@@ -227,7 +233,14 @@
         description.sdp = transformOutgoingSdp(description.sdp);
       }
 
-      connection.connection.setLocalDescription(description);
+      if (connection.connection.signalingState !== 'have-local-offer') {
+        debug("Local Session Description", description.sdp);
+        connection.connection.setLocalDescription(description, function () {
+
+        }, function (error) {
+          debug("Error setting local description: ", error);
+        });
+      }
 
       if (CONNECTED === false) {
         CONNECTION_QUEUE.push([description, connection]);
@@ -290,7 +303,12 @@
           }
         };
 
+        pc.onsignalingstatechange = function () {
+          debug("Signaling state change: ", pc.signalingState);
+        };
+
         pc.oniceconnectionstatechange = function () {
+          debug("Connection state change: ", pc.iceConnectionState);
           if (pc.iceConnectionState === "connected") {
             // Nothing for now
           }
@@ -314,6 +332,7 @@
             channel: dc
           });
 
+          debug("Creating offer...", uuid);
           pc.createOffer(function (description) {
             self.gotDescription(description, PEER_CONNECTIONS[uuid]);
           }, function (err) {
@@ -383,13 +402,11 @@
               type: PUBLISH_TYPE.STREAM,
               stream: options.stream
             });
-            //PEER_CONNECTIONS[options.user].connection.addStream(options.stream);
           } else if (options.message != null) {
             PUBLISH_QUEUE[options.user].push({
               type: PUBLISH_TYPE.MESSAGE,
               message: options.message
             });
-            //PEER_CONNECTIONS[options.user].dataChannel.send(options.message);
           } else {
             error("Stream or message key not found in argument object. One or the other must be provided for RTC publish calls!");
           }
@@ -427,7 +444,7 @@
           }
 
           // Replay the backfilled messages if they exist
-          debug("Subscribing!", connection.history);
+          debug("Subscribing to user: ", options.user, connection.history);
           if (connection.history.length > 0) {
             for (var i = 0; i < connection.history.length; i++) {
               var message = connection.history[i];
@@ -538,7 +555,7 @@
       options.uuid = uuid;
 
       // Create pubnub object
-      debug(options);
+      debug("PubNub init: ", options);
       var pubnub = _super.call(this, options);
 
       // Extend the WebRTC API

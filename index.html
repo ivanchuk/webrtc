@@ -25,7 +25,7 @@
         <br />
         <br />
 
-        <div id="response" style="max-height: 250px; display: block; overflow: scroll;">
+        <div id="response" style="max-height: 250px; display: block; overflow: auto;">
           [Responses sent across the WebRTC Data Channel will show up here]
         </div>
       </div>
@@ -44,7 +44,7 @@
   <script src="bower_components/jquery/jquery.js"></script>
   <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
   <script type="text/javascript" src="http://cdn.pubnub.com/pubnub.js"></script>
-  <script type="text/javascript" src="webrtc-beta-pubnub.js"></script>
+  <script type="text/javascript" src="../src/webrtc-beta-pubnub.js"></script>
   <script type="text/javascript">
     // Grab a reference to all of our elements
     var connectButton = document.querySelector('#connect'),
@@ -79,6 +79,7 @@
 
       sendButton.disabled = false;
       inputField.disabled = false;
+      connectButton.disabled = true;
     });
 
     // When we hit send, send the message over WebRTC Data Channel

@@ -1,4 +1,4 @@
-PubNub WebRTC SDK v0.6.0
+PubNub WebRTC SDK v0.7.0
 ======
 
 PubNub now offers a new API for enhancing your WebRTC applications with the power of PubNub. Our WebRTC API will perform signaling between your users to allow them to connect with a RTCPeerConnection. From there you can use the PubNub API to enhance your peer application with features such as presence and history. PubNub Presence will allow you to find what users are connected to your application and give you a phonebook of people to connect to. You can also use history to see what connections you have made and reconnect to people from the past.
@@ -64,11 +64,32 @@ Options:
 * [message]: The string to send using WebRTC Data Channel
 * [stream]: The video or audio stream to add to the peer connection
 
+### Stream Publishing
+Since WebRTC requires all streams to be published before a connection is made, all publish calls with a `stream` made after a subscribe or onNewConnection will fail. All streams are immediately added to the peer connection when this is called.
+
 Example:
 ```javascript
 pubnub.publish({
   user: 'ABC123',
   message: 'Hello there!'
+});
+```
+
+## pubnub.onNewConnection(callback)
+
+This is a work around for publishing a video / audio stream to a user who has already initiated a connection. This will be called before the connection is finalized, giving your client a chance to publish their own media stream back to the other user as required by the specification. This solves a chicken - egg problem with the publish / subscribe methods.
+
+Options
+* callback: A function that takes a UUID as an argument to know who is connecting
+
+Example
+```javascript
+pubnub.onNewConnection(function (uuid) {
+  // Here we can decide if we need to publish our own media stream back
+  pubnub.publish({
+    user: uuid,
+    stream: myStream
+  });
 });
 ```
 
@@ -80,6 +101,8 @@ Options:
 * user: The unique user ID to listen to
 * [callback]: The function to call when a data message is received
 * [stream]: The function to call when a video or audio stream is added to the connection
+* [connect]: Called when a connection is established
+* [disconnect]: Called when a connection is closed
 
 Example:
 ```javascript
@@ -87,6 +110,12 @@ pubnub.subscribe({
   user: 'ABC123',
   callback: function (message) {
     console.log('I got the message ', message);
+  },
+  connect: function (uuid, peerConnection) {
+    // Called when the peerConnection is fully established
+  },
+  disconnect: function (uuid, peerConnection) {
+    // Called when the peerConnection is closed
   }
 });
 ```

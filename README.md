@@ -1,5 +1,11 @@
-PubNub WebRTC SDK v0.7.0
+# Wait! You need the New PubNub WebRTC SDK
+
+> [WebRTC Simple Calling API + Mobile](https://github.com/stephenlb/webrtc-sdk)
+
+**Depricated** PubNub WebRTC SDK v0.7.0 ~ Old
 ======
+
+Don't forget this is the old SDK reposiotry.  Make sure you go to [WebRTC Simple Calling API + Mobile](https://github.com/stephenlb/webrtc-sdk) instead.
 
 PubNub now offers a new API for enhancing your WebRTC applications with the power of PubNub. Our WebRTC API will perform signaling between your users to allow them to connect with a RTCPeerConnection. From there you can use the PubNub API to enhance your peer application with features such as presence and history. PubNub Presence will allow you to find what users are connected to your application and give you a phonebook of people to connect to. You can also use history to see what connections you have made and reconnect to people from the past.
 

@@ -2,7 +2,7 @@
 
 > [WebRTC Simple Calling API + Mobile](https://github.com/stephenlb/webrtc-sdk)
 
-**Depricated** PubNub WebRTC SDK v0.7.0 ~ Old
+PubNub WebRTC SDK v0.7.0 ~ Old
 ======
 
 Don't forget this is the old SDK reposiotry.  Make sure you go to [WebRTC Simple Calling API + Mobile](https://github.com/stephenlb/webrtc-sdk) instead.
@@ -135,7 +135,7 @@ Options:
 
 Example:
 ```javascript
-pubnub.subscribe({
+pubnub.unsubscribe({
   user: 'ABC123'
 });
 ```

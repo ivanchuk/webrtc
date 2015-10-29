@@ -165,7 +165,7 @@ Options:
 
 Example:
 ```javascript
-pubnub.peerConnection('ABC123', function (dc) {
+pubnub.dataChannel('ABC123', function (dc) {
   
 });
 ```
